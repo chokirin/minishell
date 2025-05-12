@@ -1,0 +1,98 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   token_creation.c                                   :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: hailong <hailong@student.42.fr>            +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/05/12 08:07:55 by hailong           #+#    #+#             */
+/*   Updated: 2025/05/12 08:07:55 by hailong          ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+#include "../../incl/parsing.h"
+
+void	add_token(t_token **head, t_token *new_token)
+{
+	t_token	*temp;
+
+	if (!*head)
+	{
+		*head = new_token;
+		return ;
+	}
+	temp = *head;
+	while (temp->next)
+		temp = temp->next;
+	temp->next = new_token;
+}
+
+char	*extract_quoted(char *input, int *i, char quote)
+{
+	char	*quoted;
+
+	if (input[*i] == input[*i - 1] && ft_isspace(input[*i + 1]))
+	{
+		quoted = ft_strdup(" ");
+		(*i) += 2;
+		return (quoted);
+	}
+	else if (input[*i] == input[*i - 1])
+	{
+		quoted = ft_strdup("");
+		(*i) += 1;
+		return (quoted);
+	}
+	quoted = extract_quoted_content(input, i, quote);
+	if (!quoted)
+		return (NULL);
+	return (quoted);
+}
+
+t_token	*create_token(char *value, int type)
+{
+	t_token	*token;
+
+	token = malloc(sizeof(t_token));
+	if (!token)
+		return (NULL);
+	token->value = ft_strdup(value);
+	token->type = type;
+	token->consecutive_quote = 0;
+	token->next = NULL;
+	return (token);
+}
+
+int	get_token_type(char *s)
+{
+	if (strcmp(s, "|") == 0)
+		return (TOKEN_PIPE);
+	if (strcmp(s, "||") == 0)
+		return (TOKEN_OR);
+	if (strcmp(s, "<") == 0)
+		return (TOKEN_REDIRECT_IN);
+	if (strcmp(s, ">") == 0)
+		return (TOKEN_REDIRECT_OUT);
+	if (strcmp(s, ">>") == 0)
+		return (TOKEN_REDIRECT_APPEND);
+	if (strcmp(s, "<<") == 0)
+		return (TOKEN_HEREDOC);
+	if (strcmp(s, "&&") == 0)
+		return (TOKEN_AND);
+	if (strcmp(s, "&") == 0)
+		return (TOKEN_AND_SINGLE);
+	return (TOKEN_WORD);
+}
+
+void	free_tokens(t_token *tokens)
+{
+	t_token	*tmp;
+
+	while (tokens)
+	{
+		tmp = tokens;
+		free(tokens->value);
+		tokens = tokens->next;
+		free(tmp);
+	}
+}
